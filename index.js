@@ -1,50 +1,55 @@
-const express = require('express')
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const cors = require('cors')
-const app = express()
-const port = 3000
+const express = require("express");
+const { MongoClient, ServerApiVersion } = require("mongodb");
+const cors = require("cors");
 
-app.use(cors())
-app.use(express.json())
+const app = express();
+const port = 3000;
 
+app.use(cors());
+app.use(express.json());
 
+// MongoDB Connection
+const uri =
+  "mongodb+srv://loan-link:59LjyohVxLdTsqmQ@cluster0.56d1e2x.mongodb.net/?appName=Cluster0";
 
-const uri = "mongodb+srv://loan-link:59LjyohVxLdTsqmQ@cluster0.56d1e2x.mongodb.net/?appName=Cluster0";
-
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-    // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
+    console.log("MongoDB Connected!");
+
+    const db = client.db("loanlinkDB");
+
+    // ROUTES IMPORT
+    const loanRoutes = require("./routes/loanRoutes")(db);
+    const userRoutes = require("./routes/userRoutes")(db);
+    const emiRoutes = require("./routes/emiRoutes")();
+
+    // ROUTES USE
+    app.use("/loans", loanRoutes);
+    app.use("/users", userRoutes);
+    app.use("/emi", emiRoutes);
+
+    // Default Route
+    app.get("/", (req, res) => {
+      res.send("LoanLink Server Running!");
+    });
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
   }
 }
+
 run().catch(console.dir);
 
-
-
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
-
-app.get('/hello', (req, res) => {
-  res.send('Hello from /hello endpoint!')
-
-})
-
+// Start Server
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+  console.log(`Server running on port ${port}`);
+});
