@@ -2,6 +2,11 @@ const express = require("express");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
+const adminUsersRoutes = require("./routes/adminUsers.routes");
+const adminLoansRoutes = require("./routes/adminLoans.routes");
+const managerLoansRoutes = require("./routes/managerLoans.routes");
+app.use("/manager", managerLoansRoutes);
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -16,6 +21,9 @@ app.use(
   })
 );
 app.use(express.json());
+
+app.use("/admin", adminUsersRoutes);
+app.use("/admin", adminLoansRoutes);
 
 // =======================
 // MongoDB URI
