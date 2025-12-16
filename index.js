@@ -4,6 +4,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
+const path = require("path"); // <-- Added for React build serving
 
 // Routes
 const adminUsersRoutes = require("./routes/adminUsers.routes");
@@ -95,6 +96,26 @@ async function run() {
         res.status(500).send({ error: err.message });
       }
     });
+
+
+    const verifyToken = (req, res, next) => {
+  const token = req.cookies?.token;
+
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    req.user = decoded;
+    next();
+  });
+};
+
+
 
     /* =======================
        LOGIN (JWT + COOKIE)
@@ -263,6 +284,16 @@ async function run() {
     ======================= */
     app.get("/", (req, res) => {
       res.send("🚀 LoanLink Server Running");
+    });
+
+    /* =======================
+       React Build Serve
+    ======================= */
+    const clientBuildPath = path.join(__dirname, "client/build");
+    app.use(express.static(clientBuildPath));
+
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(clientBuildPath, "index.html"));
     });
   } catch (error) {
     console.error("MongoDB connection error:", error);
