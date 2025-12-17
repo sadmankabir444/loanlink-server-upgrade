@@ -4,7 +4,7 @@ const verifyJWT = require("../middlewares/verifyJWT");
 const verifyManager = require("../middlewares/verifyManager");
 const { ObjectId } = require("mongodb");
 
-// 📥 Get Pending Loan Applications (Manager only)
+//  Get Pending Loan Applications (Manager only)
 router.get("/pending", verifyJWT, verifyManager, async (req, res) => {
   const loanAppsCollection = req.app.locals.loanApplicationsCollection;
 
@@ -15,7 +15,7 @@ router.get("/pending", verifyJWT, verifyManager, async (req, res) => {
   res.send(result);
 });
 
-// 📥 Get Approved Loan Applications (Manager only)
+//  Get Approved Loan Applications (Manager only)
 router.get("/approved", verifyJWT, verifyManager, async (req, res) => {
   const loanAppsCollection = req.app.locals.loanApplicationsCollection;
 
@@ -27,7 +27,7 @@ router.get("/approved", verifyJWT, verifyManager, async (req, res) => {
 });
 
 
-// ✅ Approve loan
+// Approve loan
 router.patch("/approve/:id", verifyJWT, verifyManager, async (req, res) => {
   const loanAppsCollection = req.app.locals.loanApplicationsCollection;
   const { id } = req.params;
@@ -40,7 +40,7 @@ router.patch("/approve/:id", verifyJWT, verifyManager, async (req, res) => {
   res.send(result);
 });
 
-// ❌ Reject loan
+// Reject loan
 router.patch("/reject/:id", verifyJWT, verifyManager, async (req, res) => {
   const loanAppsCollection = req.app.locals.loanApplicationsCollection;
   const { id } = req.params;

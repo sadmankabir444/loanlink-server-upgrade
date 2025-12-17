@@ -44,7 +44,7 @@ const client = new MongoClient(uri, {
 ======================= */
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     console.log("✅ MongoDB Connected");
 
     const db = client.db(process.env.DB_NAME);
@@ -120,51 +120,6 @@ async function run() {
         res.send(user);
       } catch (err) {
         res.status(500).send({ error: err.message });
-      }
-    });
-
-    app.patch("/users/role/:id", verifyToken, verifyAdmin, async (req, res) => {
-      try {
-        const { role } = req.body;
-
-        const result = await usersCollection.updateOne(
-          { _id: new ObjectId(req.params.id) },
-          { $set: { role } }
-        );
-
-        res.send(result);
-      } catch (error) {
-        res.status(500).send({ error: error.message });
-      }
-    });
-
-    app.patch(
-      "/users/suspend/:id",
-      verifyToken,
-      verifyAdmin,
-      async (req, res) => {
-        try {
-          const result = await usersCollection.updateOne(
-            { _id: new ObjectId(req.params.id) },
-            { $set: { suspended: true } }
-          );
-
-          res.send(result);
-        } catch (error) {
-          res.status(500).send({ error: error.message });
-        }
-      }
-    );
-
-    app.delete("/users/:id", verifyToken, verifyAdmin, async (req, res) => {
-      try {
-        const result = await usersCollection.deleteOne({
-          _id: new ObjectId(req.params.id),
-        });
-
-        res.send(result);
-      } catch (error) {
-        res.status(500).send({ error: error.message });
       }
     });
 
@@ -330,6 +285,11 @@ async function run() {
     /* =======================
        ROLE BASED ROUTES
     ======================= */
+
+    app.locals.usersCollection = usersCollection; // ✅ add this
+    app.locals.loansCollection = loansCollection; // optional, future routes
+    app.locals.applicationsCollection = applicationsCollection; // optional
+
     app.use("/admin", adminUsersRoutes);
     app.use("/admin", adminLoansRoutes(db));
     app.use("/manager", managerLoansRoutes(db));

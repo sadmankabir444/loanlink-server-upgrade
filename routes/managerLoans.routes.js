@@ -4,11 +4,11 @@ const { ObjectId } = require("mongodb");
 module.exports = (db) => {
   const router = express.Router();
   const applicationsCollection = db.collection("loanApplications");
-  const loansCollection = db.collection("loans"); // Added for loan creation
+  const loansCollection = db.collection("loans"); 
 
-  // =======================
+  
   // Middleware
-  // =======================
+  
   const verifyToken = (req, res, next) => {
     const token = req.cookies?.token;
     if (!token) return res.status(401).json({ message: "Unauthorized" });
@@ -27,9 +27,9 @@ module.exports = (db) => {
     return res.status(403).json({ message: "Forbidden: Manager access only" });
   };
 
-  // =======================
+  
   // POST Add Loan
-  // =======================
+  
   router.post("/add-loan", verifyToken, verifyManager, async (req, res) => {
     try {
       const loan = req.body;
@@ -44,13 +44,13 @@ module.exports = (db) => {
     }
   });
 
-  // =======================
+  
   // GET My Loans
-  // =======================
+
   router.get("/my-loans", verifyToken, verifyManager, async (req, res) => {
     try {
       const myLoans = await applicationsCollection
-        .find({ managerEmail: req.user.email }) // example filter
+        .find({ managerEmail: req.user.email }) 
         .toArray();
       res.send(myLoans);
     } catch (err) {
@@ -59,9 +59,9 @@ module.exports = (db) => {
     }
   });
 
-  // =======================
+  
   // GET Pending Loans
-  // =======================
+  
   router.get("/pending", verifyToken, verifyManager, async (req, res) => {
     try {
       const result = await applicationsCollection.find({ status: "Pending" }).toArray();
@@ -72,9 +72,9 @@ module.exports = (db) => {
     }
   });
 
-  // =======================
+  
   // GET Approved Loans
-  // =======================
+  
   router.get("/approved", verifyToken, verifyManager, async (req, res) => {
     try {
       const result = await applicationsCollection.find({ status: "Approved" }).toArray();
@@ -85,9 +85,9 @@ module.exports = (db) => {
     }
   });
 
-  // =======================
+  
 // PATCH Approve Loan
-// =======================
+
 router.patch("/approve/:id", verifyToken, verifyManager, async (req, res) => {
   try {
     const loanId = req.params.id;
@@ -109,9 +109,9 @@ router.patch("/approve/:id", verifyToken, verifyManager, async (req, res) => {
 });
 
 
-// =======================
+
 // PATCH Reject Loan
-// =======================
+
 router.patch("/reject/:id", verifyToken, verifyManager, async (req, res) => {
   try {
     const loanId = req.params.id;

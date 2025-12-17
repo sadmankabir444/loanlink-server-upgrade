@@ -4,9 +4,9 @@ const verifyToken = require("../middleware/verifyToken");
 
 const router = express.Router();
 
-// =======================
+
 // ADMIN GUARD
-// =======================
+
 const verifyAdmin = (req, res, next) => {
   if (req.user?.role === "admin") return next();
   return res.status(403).json({ message: "Admins only" });
@@ -16,17 +16,17 @@ module.exports = (db) => {
   const loansCollection = db.collection("loans");
   const applicationsCollection = db.collection("loanApplications");
 
-  // =======================
+  
   // GET ALL LOANS
-  // =======================
+  
   router.get("/all-loans", verifyToken, verifyAdmin, async (req, res) => {
     const loans = await loansCollection.find().toArray();
     res.send(loans);
   });
 
-  // =======================
+  
   // TOGGLE SHOW ON HOME
-  // =======================
+  
   router.patch(
     "/loan/show-home/:id",
     verifyToken,
@@ -43,9 +43,9 @@ module.exports = (db) => {
     }
   );
 
-  // =======================
+  
   // UPDATE LOAN
-  // =======================
+  
   router.patch(
     "/loan/update/:id",
     verifyToken,
@@ -59,9 +59,9 @@ module.exports = (db) => {
     }
   );
 
-  // =======================
+  
   // DELETE LOAN
-  // =======================
+  
   router.delete(
     "/loan/:id",
     verifyToken,
@@ -74,9 +74,9 @@ module.exports = (db) => {
     }
   );
 
-  // =======================
+  
   // GET LOAN APPLICATIONS (ADMIN)
-  // =======================
+  
   router.get(
     "/loan-applications",
     verifyToken,

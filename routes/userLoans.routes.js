@@ -3,7 +3,7 @@ const router = express.Router();
 const verifyJWT = require("../middlewares/verifyJWT");
 const { ObjectId } = require("mongodb");
 
-// 📥 Get current user's loans
+//  Get current user's loans
 router.get("/my-loans", verifyJWT, async (req, res) => {
   const loanAppsCollection = req.app.locals.loanApplicationsCollection;
   const result = await loanAppsCollection
@@ -12,7 +12,7 @@ router.get("/my-loans", verifyJWT, async (req, res) => {
   res.send(result);
 });
 
-// ❌ Cancel Pending Loan
+//  Cancel Pending Loan
 router.patch("/cancel/:id", verifyJWT, async (req, res) => {
   const loanAppsCollection = req.app.locals.loanApplicationsCollection;
   const { id } = req.params;
@@ -30,7 +30,7 @@ router.patch("/cancel/:id", verifyJWT, async (req, res) => {
   res.send({ success: true });
 });
 
-// 💰 Update Payment Status (called after Stripe success)
+//  Update Payment Status (called after Stripe success)
 router.patch("/pay/:id", verifyJWT, async (req, res) => {
   const loanAppsCollection = req.app.locals.loanApplicationsCollection;
   const { id } = req.params;

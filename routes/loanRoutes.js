@@ -5,9 +5,9 @@ const verifyToken = require("../middleware/verifyToken");
 module.exports = (db) => {
   const loanCollection = db.collection("loans");
 
-  // ============================
+  
   // 1. Create Loan Request (POST)
-  // ============================
+  
   router.post("/", async (req, res) => {
     try {
       const loanData = req.body;
@@ -30,9 +30,9 @@ module.exports = (db) => {
     }
   });
 
-  // =============================
+  
   // 2. Get ALL loan requests (GET)
-  // =============================
+  
   router.get("/", async (req, res) => {
     try {
       const loans = await loanCollection.find().toArray();
@@ -42,9 +42,9 @@ module.exports = (db) => {
     }
   });
 
-  // =============================
+  
   // 3. Update loan status (PATCH) — PROTECTED
-  // =============================
+  
   router.patch("/:id", verifyToken, async (req, res) => {
     try {
       const { id } = req.params;

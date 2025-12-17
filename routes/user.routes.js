@@ -8,9 +8,9 @@ function userRoutes(db) {
   const router = express.Router();
   const userCollection = db.collection("users");
 
-  // =============================
+  
   // 1. Register / Create User
-  // =============================
+  
   router.post("/register", async (req, res) => {
     try {
       const { name, email, password, role } = req.body;
@@ -44,9 +44,9 @@ function userRoutes(db) {
     }
   });
 
-  // =============================
+  
   // 2. Login
-  // =============================
+  
   router.post("/login", async (req, res) => {
     try {
       const { email, password } = req.body;
@@ -82,9 +82,9 @@ function userRoutes(db) {
     }
   });
 
-  // =============================
+  
   // 3. Get All Users (Admin only)
-  // =============================
+  
   router.get("/", verifyToken, async (req, res) => {
     try {
       if (req.user.role !== "admin") {
@@ -99,9 +99,9 @@ function userRoutes(db) {
     }
   });
 
-  // =============================
+  
   // 4. Get Single User by Email
-  // =============================
+  
   router.get("/:email", verifyToken, async (req, res) => {
     try {
       const email = req.params.email;
@@ -116,9 +116,9 @@ function userRoutes(db) {
     }
   });
 
-  // =============================
+  
   // 5. Update User Role (Admin only)
-  // =============================
+  
   router.patch("/role/:id", verifyToken, async (req, res) => {
     try {
       if (req.user.role !== "admin") {
@@ -140,9 +140,9 @@ function userRoutes(db) {
     }
   });
 
-  // =============================
+  
   // 6. Suspend / Update User
-  // =============================
+  
   router.patch("/suspend/:id", verifyToken, async (req, res) => {
     try {
       if (req.user.role !== "admin") {
@@ -150,7 +150,7 @@ function userRoutes(db) {
       }
 
       const id = req.params.id;
-      const updateData = req.body; // e.g., { suspended: true, reason: "Violation" }
+      const updateData = req.body;
 
       const result = await userCollection.updateOne(
         { _id: new ObjectId(id) },
@@ -164,9 +164,9 @@ function userRoutes(db) {
     }
   });
 
-  // =============================
+  
   // 7. Get Logged-in Profile
-  // =============================
+  
   router.get("/profile/me", verifyToken, async (req, res) => {
     try {
       const user = await userCollection.findOne({ _id: new ObjectId(req.user.id) });

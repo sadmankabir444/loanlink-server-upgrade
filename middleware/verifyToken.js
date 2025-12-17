@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 
 const verifyToken = (req, res, next) => {
   try {
-    // 🔐 Read token from HTTP-only cookie
+    // Read token from HTTP-only cookie
     const token = req.cookies?.token;
 
     if (!token) {
@@ -11,7 +11,7 @@ const verifyToken = (req, res, next) => {
       });
     }
 
-    // 🔍 Verify JWT token
+    // Verify JWT token
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
       if (err) {
         return res.status(403).json({
@@ -19,7 +19,6 @@ const verifyToken = (req, res, next) => {
         });
       }
 
-      // ✅ Attach decoded user info to request
       req.user = decoded;
       next();
     });
