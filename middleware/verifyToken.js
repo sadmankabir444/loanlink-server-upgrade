@@ -31,4 +31,23 @@ const verifyToken = (req, res, next) => {
   }
 };
 
+
+const verifyAdmin = async (req, res, next) => {
+  try {
+    const adminUser = await usersCollection.findOne({
+      email: req.user.email,
+    });
+
+    if (adminUser?.role !== "admin") {
+      return res.status(403).json({ message: "Admin access only" });
+    }
+
+    next();
+  } catch (error) {
+    res.status(500).json({ message: "Admin verification failed" });
+  }
+};
+
+
+
 module.exports = verifyToken;

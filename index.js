@@ -79,7 +79,8 @@ async function run() {
       try {
         const { email, name, photo, role } = req.body;
 
-        if (!email) return res.status(400).json({ message: "Email is required" });
+        if (!email)
+          return res.status(400).json({ message: "Email is required" });
 
         const existingUser = await usersCollection.findOne({ email });
 
@@ -122,6 +123,51 @@ async function run() {
       }
     });
 
+    app.patch("/users/role/:id", verifyToken, verifyAdmin, async (req, res) => {
+      try {
+        const { role } = req.body;
+
+        const result = await usersCollection.updateOne(
+          { _id: new ObjectId(req.params.id) },
+          { $set: { role } }
+        );
+
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ error: error.message });
+      }
+    });
+
+    app.patch(
+      "/users/suspend/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        try {
+          const result = await usersCollection.updateOne(
+            { _id: new ObjectId(req.params.id) },
+            { $set: { suspended: true } }
+          );
+
+          res.send(result);
+        } catch (error) {
+          res.status(500).send({ error: error.message });
+        }
+      }
+    );
+
+    app.delete("/users/:id", verifyToken, verifyAdmin, async (req, res) => {
+      try {
+        const result = await usersCollection.deleteOne({
+          _id: new ObjectId(req.params.id),
+        });
+
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ error: error.message });
+      }
+    });
+
     /* =======================
        LOGIN (JWT + COOKIE)
     ======================= */
@@ -138,7 +184,9 @@ async function run() {
         if (password) {
           // normal email/password login
           if (!user || user.password !== password) {
-            return res.status(401).json({ message: "Invalid email or password" });
+            return res
+              .status(401)
+              .json({ message: "Invalid email or password" });
           }
         } else {
           // password missing → Firebase / Google login
@@ -216,7 +264,9 @@ async function run() {
 
     app.get("/loans/:id", async (req, res) => {
       try {
-        const loan = await loansCollection.findOne({ _id: new ObjectId(req.params.id) });
+        const loan = await loansCollection.findOne({
+          _id: new ObjectId(req.params.id),
+        });
         res.send(loan);
       } catch (err) {
         res.status(500).send({ error: err.message });
@@ -225,7 +275,9 @@ async function run() {
 
     app.delete("/loans/:id", async (req, res) => {
       try {
-        const result = await loansCollection.deleteOne({ _id: new ObjectId(req.params.id) });
+        const result = await loansCollection.deleteOne({
+          _id: new ObjectId(req.params.id),
+        });
         res.send(result);
       } catch (err) {
         res.status(500).send({ error: err.message });
