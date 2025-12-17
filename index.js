@@ -4,7 +4,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
-const path = require("path"); // <-- Added for React build serving
+const path = require("path");
 
 // Routes
 const adminUsersRoutes = require("./routes/adminUsers.routes");
@@ -53,29 +53,57 @@ async function run() {
     const applicationsCollection = db.collection("loanApplications");
 
     /* =======================
-       USERS
+       JWT VERIFY
     ======================= */
+    const verifyToken = (req, res, next) => {
+      const token = req.cookies?.token;
 
-    // Register User
-    app.post("/users", async (req, res) => {
-      try {
-        const user = req.body;
-        const exists = await usersCollection.findOne({ email: user.email });
-        if (exists) {
-          return res.status(400).send({ message: "User already exists" });
+      if (!token) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) {
+          return res.status(403).json({ message: "Forbidden" });
         }
 
-        user.role = user.role || "borrower";
-        user.createdAt = new Date();
+        req.user = decoded;
+        next();
+      });
+    };
+
+    /* =======================
+       USERS
+    ======================= */
+    app.post("/users", async (req, res) => {
+      try {
+        const { email, name, photo, role } = req.body;
+
+        if (!email) return res.status(400).json({ message: "Email is required" });
+
+        const existingUser = await usersCollection.findOne({ email });
+
+        if (existingUser) {
+          // User already exists → ignore error
+          return res.json(existingUser);
+        }
+
+        const user = {
+          email,
+          name: name || "",
+          photo: photo || "",
+          role: role || "borrower",
+          createdAt: new Date(),
+        };
 
         const result = await usersCollection.insertOne(user);
-        res.send(result);
+        res.json({ ...user, _id: result.insertedId });
       } catch (err) {
-        res.status(500).send({ error: err.message });
+        console.error("Register error:", err);
+        res.status(500).json({ message: "Internal server error" });
       }
     });
 
-    // Get all users
     app.get("/users", async (req, res) => {
       try {
         const users = await usersCollection.find().toArray();
@@ -85,37 +113,14 @@ async function run() {
       }
     });
 
-    // Get single user by email
     app.get("/users/:email", async (req, res) => {
       try {
-        const user = await usersCollection.findOne({
-          email: req.params.email,
-        });
+        const user = await usersCollection.findOne({ email: req.params.email });
         res.send(user);
       } catch (err) {
         res.status(500).send({ error: err.message });
       }
     });
-
-
-    const verifyToken = (req, res, next) => {
-  const token = req.cookies?.token;
-
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-
-    req.user = decoded;
-    next();
-  });
-};
-
-
 
     /* =======================
        LOGIN (JWT + COOKIE)
@@ -124,17 +129,28 @@ async function run() {
       try {
         const { email, password } = req.body;
 
-        if (!email || !password) {
-          return res
-            .status(400)
-            .json({ message: "Email and password required" });
+        if (!email) {
+          return res.status(400).json({ message: "Email is required" });
         }
 
-        const user = await usersCollection.findOne({ email });
-        if (!user || user.password !== password) {
-          return res
-            .status(401)
-            .json({ message: "Invalid email or password" });
+        let user = await usersCollection.findOne({ email });
+
+        if (password) {
+          // normal email/password login
+          if (!user || user.password !== password) {
+            return res.status(401).json({ message: "Invalid email or password" });
+          }
+        } else {
+          // password missing → Firebase / Google login
+          if (!user) {
+            const newUser = {
+              email,
+              role: "borrower",
+              createdAt: new Date(),
+            };
+            const result = await usersCollection.insertOne(newUser);
+            user = { _id: result.insertedId, ...newUser };
+          }
         }
 
         const token = jwt.sign(
@@ -150,7 +166,7 @@ async function run() {
         res
           .cookie("token", token, {
             httpOnly: true,
-            secure: false, // production এ true করবে
+            secure: false,
             sameSite: "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000,
           })
@@ -171,8 +187,6 @@ async function run() {
     /* =======================
        LOANS
     ======================= */
-
-    // Create loan
     app.post("/loans", async (req, res) => {
       try {
         const loan = req.body;
@@ -186,7 +200,6 @@ async function run() {
       }
     });
 
-    // Get all loans
     app.get("/loans", async (req, res) => {
       try {
         const limit = parseInt(req.query.limit);
@@ -201,24 +214,18 @@ async function run() {
       }
     });
 
-    // Get single loan
     app.get("/loans/:id", async (req, res) => {
       try {
-        const loan = await loansCollection.findOne({
-          _id: new ObjectId(req.params.id),
-        });
+        const loan = await loansCollection.findOne({ _id: new ObjectId(req.params.id) });
         res.send(loan);
       } catch (err) {
         res.status(500).send({ error: err.message });
       }
     });
 
-    // Delete loan
     app.delete("/loans/:id", async (req, res) => {
       try {
-        const result = await loansCollection.deleteOne({
-          _id: new ObjectId(req.params.id),
-        });
+        const result = await loansCollection.deleteOne({ _id: new ObjectId(req.params.id) });
         res.send(result);
       } catch (err) {
         res.status(500).send({ error: err.message });
@@ -228,8 +235,6 @@ async function run() {
     /* =======================
        LOAN APPLICATIONS
     ======================= */
-
-    // Apply loan
     app.post("/loan-applications", async (req, res) => {
       try {
         const application = req.body;
@@ -244,7 +249,6 @@ async function run() {
       }
     });
 
-    // Get loan applications
     app.get("/loan-applications", async (req, res) => {
       try {
         const { email, status } = req.query;
@@ -259,7 +263,6 @@ async function run() {
       }
     });
 
-    // Update loan application
     app.patch("/loan-applications/:id", async (req, res) => {
       try {
         const result = await applicationsCollection.updateOne(
@@ -277,7 +280,7 @@ async function run() {
     ======================= */
     app.use("/admin", adminUsersRoutes);
     app.use("/admin", adminLoansRoutes(db));
-    app.use("/manager", managerLoansRoutes);
+    app.use("/manager", managerLoansRoutes(db));
 
     /* =======================
        Health Check
