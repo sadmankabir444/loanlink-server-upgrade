@@ -1,4 +1,3 @@
-// index.js (আপনার আগের কোডের সাথে merge)
 const express = require("express");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
@@ -14,19 +13,33 @@ const managerLoansRoutes = require("./routes/managerLoans.routes");
 
 const app = express();
 
-const allowedOrigin =
-  process.env.NODE_ENV === "production"
-    ? "https://dreamy-blancmange-7324a2.netlify.app"
-    : "http://localhost:5175";
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://dreamy-blancmange-7324a2.netlify.app",
+];
 
 app.use(
   cors({
-    origin: allowedOrigin,
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
-    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
   })
 );
-app.options("*", cors({ origin: allowedOrigin, credentials: true }));
+
+
+app.use((req, res, next) => {
+  res.setHeader("Cache-Control", "no-store");
+  next();
+});
+
+
 
 app.use(express.json());
 app.use(cookieParser());
