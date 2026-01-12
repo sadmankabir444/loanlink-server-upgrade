@@ -17,7 +17,9 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
   "http://localhost:5175",
-  "https://dreamy-blancmange-7324a2.netlify.app",
+  "https://jovial-medovik-6583cd.netlify.app/",
+  "https://jovial-medovik-6583cd.netlify.app",
+  "https://loanlink-client-seven.vercel.app",
 ];
 
 app.use(
